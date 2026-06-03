@@ -1,0 +1,11 @@
+pandas
+numpy
+scikit-learn
+nltk
+spacy
+streamlit>=1.36.0
+openai-whisper
+soundfile
+textblob
+kagglehub
+gTTS
