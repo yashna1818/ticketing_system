@@ -1,3 +1,13 @@
+---
+title: AI Voice Support Console
+emoji: 🎙️
+colorFrom: purple
+colorTo: indigo
+sdk: docker
+app_port: 8501
+pinned: false
+---
+
 # Voice-Enabled Customer Support Ticket Classification System
 
 An end-to-end AI project that allows customer support inputs via speech or text, transcribes them using **Whisper**, automatically extracts sentiment and issue priority, and classifies the tickets using a Machine Learning pipeline (TF-IDF + Logistic Regression). 
