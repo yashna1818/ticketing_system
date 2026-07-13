@@ -59,6 +59,53 @@ def init_db():
     conn.commit()
 
     conn.close()
+    
+    # Seed sample multi-lingual ticket data if queue is empty
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT COUNT(*) FROM tickets")
+    count = cursor.fetchone()[0]
+    if count == 0:
+        import datetime
+        now = datetime.datetime.now()
+        seeds = [
+            (
+                "मेरा खाता ब्लॉक हो गया है और मैं लॉग इन नहीं कर पा रहा हूँ, कृपया तुरंत मदद करें।",
+                "Account Access", "Account Access", "Negative", "High", "logistic", "New", "",
+                (now - datetime.timedelta(minutes=5)).strftime("%Y-%m-%d %H:%M:%S"),
+                "hi", "My account has been blocked and I cannot log in, please help immediately."
+            ),
+            (
+                "I was double charged on my credit card for the annual subscription renewal fees. This is unauthorized and fraudulent!",
+                "Billing Issue", "Billing Issue", "Negative", "High", "svc", "In Progress", "Agent is currently inspecting payment processor logs.",
+                (now - datetime.timedelta(minutes=15)).strftime("%Y-%m-%d %H:%M:%S"),
+                "en", ""
+            ),
+            (
+                "ನನ್ನ ಮೊಬೈಲ್ ಆಪ್‌ನಲ್ಲಿ ಅಪ್‌ಡೇಟ್ ಆದ ನಂತರ ಡೇಟಾ ಸಿಂಕ್ ಆಗ್ತಿಲ್ಲ.",
+                "Technical Issue", "Technical Issue", "Negative", "Medium", "naive_bayes", "New", "",
+                (now - datetime.timedelta(minutes=30)).strftime("%Y-%m-%d %H:%M:%S"),
+                "kn", "Data is not syncing in my mobile app after the update."
+            ),
+            (
+                "Hello, I would like to know if your system supports custom dark mode theme settings or background options?",
+                "General Inquiry", "General Inquiry", "Positive", "Low", "logistic", "Resolved", "Sent styling options guide and documentation link.",
+                (now - datetime.timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S"),
+                "en", ""
+            ),
+            (
+                "I requested a refund for my cancelled subscription last week but haven't received the credit yet.",
+                "Refund Request", "Refund Request", "Neutral", "Medium", "svc", "New", "",
+                (now - datetime.timedelta(hours=2)).strftime("%Y-%m-%d %H:%M:%S"),
+                "en", ""
+            )
+        ]
+        cursor.executemany("""
+            INSERT INTO tickets (transcript, predicted_category, actual_category, sentiment, priority, model_used, status, resolution_note, timestamp, language, translation)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, seeds)
+        conn.commit()
+    conn.close()
 
 def add_ticket(transcript, category, sentiment, priority, model_used, language='en', translation=''):
     """

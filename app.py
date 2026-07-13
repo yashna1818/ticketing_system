@@ -62,8 +62,8 @@ st.markdown("""
     @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
     
     /* Global font overrides */
-    html, body, .stMarkdown, p, span, label, td, th {
-        font-family: 'Outfit', sans-serif !important;
+    html, body, .stMarkdown, p, td, th {
+        font-family: 'Outfit', sans-serif;
         color: #e2e8f0;
     }
     
