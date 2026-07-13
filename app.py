@@ -213,6 +213,24 @@ st.markdown("""
         border-color: rgba(99, 102, 241, 0.25);
         box-shadow: 0 12px 30px rgba(99, 102, 241, 0.1);
     }
+    
+    /* Style Streamlit's native container borders to look like glass cards */
+    div[data-testid="stVerticalBlockBorder"] {
+        background: rgba(30, 41, 59, 0.4) !important;
+        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+        border-radius: 20px !important;
+        padding: 24px !important;
+        box-shadow: 0 15px 35px 0 rgba(0, 0, 0, 0.4) !important;
+        backdrop-filter: blur(20px) !important;
+        -webkit-backdrop-filter: blur(20px) !important;
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1) !important;
+    }
+    
+    div[data-testid="stVerticalBlockBorder"]:hover {
+        border-color: rgba(99, 102, 241, 0.35) !important;
+        box-shadow: 0 25px 50px 0 rgba(99, 102, 241, 0.12) !important;
+        transform: translateY(-3px) !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -562,25 +580,24 @@ elif app_mode == "🎙️ AI Ticket Analyzer":
 
     col_input1, col_input2, col_input3 = st.columns([1, 6, 1])
     with col_input2:
-        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-        st.write("#### 📝 Customer Query Input")
-        if input_method == "🎙️ Single Voice Note":
-            audio_value = st.audio_input("Record Audio", label_visibility="hidden")
-            if audio_value:
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f:
-                    f.write(audio_value.getbuffer())
-                    audio_path = f.name
-        elif input_method == "📁 Upload File":
-            uploaded_file = st.file_uploader("Upload customer audio (.wav, .mp3)", type=["wav", "mp3", "m4a", "ogg"])
-            if uploaded_file is not None:
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f:
-                    f.write(uploaded_file.getbuffer())
-                    audio_path = f.name
-        else:
-            text_input = st.text_area("✍️ Customer Message Context", height=150, placeholder="Type customer query here... e.g. I cannot access my account because my password reset is broken.")
+        with st.container(border=True):
+            st.write("#### 📝 Customer Query Input")
+            if input_method == "🎙️ Single Voice Note":
+                audio_value = st.audio_input("Record Audio", label_visibility="hidden")
+                if audio_value:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f:
+                        f.write(audio_value.getbuffer())
+                        audio_path = f.name
+            elif input_method == "📁 Upload File":
+                uploaded_file = st.file_uploader("Upload customer audio (.wav, .mp3)", type=["wav", "mp3", "m4a", "ogg"])
+                if uploaded_file is not None:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".wav") as f:
+                        f.write(uploaded_file.getbuffer())
+                        audio_path = f.name
+            else:
+                text_input = st.text_area("✍️ Customer Message Context", height=150, placeholder="Type customer query here... e.g. I cannot access my account because my password reset is broken.")
 
-        analyze_btn = st.button("🚀 Analyze Support Ticket", width='stretch', type="primary")
-        st.markdown("</div>", unsafe_allow_html=True)
+            analyze_btn = st.button("🚀 Analyze Support Ticket", width='stretch', type="primary")
 
     if analyze_btn:
         if not audio_path and not text_input.strip():
@@ -781,20 +798,18 @@ elif app_mode == "📊 Model Benchmarking":
         
         col_m1, col_m2 = st.columns([1.2, 1])
         with col_m1:
-            st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-            st.subheader("📈 Performance Metrics Table")
-            st.table(metrics_df)
-            st.markdown("</div>", unsafe_allow_html=True)
+            with st.container(border=True):
+                st.subheader("📈 Performance Metrics Table")
+                st.table(metrics_df)
         
         with col_m2:
-            st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-            st.subheader("📊 F1-Score & Accuracy Comparison")
-            chart_data = metrics_df[['Accuracy', 'F1-score']]
-            st.bar_chart(chart_data)
-            st.markdown("</div>", unsafe_allow_html=True)
+            with st.container(border=True):
+                st.subheader("📊 F1-Score & Accuracy Comparison")
+                chart_data = metrics_df[['Accuracy', 'F1-score']]
+                st.bar_chart(chart_data)
             
-        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-        st.subheader("🧩 Advanced Model Diagnostic Visualizations")
+        with st.container(border=True):
+            st.subheader("🧩 Advanced Model Diagnostic Visualizations")
         
         bench_model_ui = st.selectbox(
             "Select Model to Inspect:",
@@ -866,12 +881,11 @@ elif app_mode == "📊 Model Benchmarking":
                     st.info(f"No key words mapped for class '{selected_class}'")
             else:
                 st.info("No feature importances loaded. Please retrain models to compute.")
-        st.markdown("</div>", unsafe_allow_html=True)
 
     # Interactive ML Retraining Panel
-    st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-    st.subheader("⚙️ Live Interactive ML Training Panel")
-    st.markdown("Configure classifier parameters, modify dataset split size, and retrain all models on the fly.")
+    with st.container(border=True):
+        st.subheader("⚙️ Live Interactive ML Training Panel")
+        st.markdown("Configure classifier parameters, modify dataset split size, and retrain all models on the fly.")
     
     with st.form("interactive_train_form"):
         col_tr1, col_tr2 = st.columns(2)
@@ -931,7 +945,6 @@ elif app_mode == "📊 Model Benchmarking":
                     st.rerun()
                 except Exception as e:
                     st.error(f"Error during interactive training pipeline: {e}")
-    st.markdown("</div>", unsafe_allow_html=True)
 
 
 # --- 5. Admin Ticket Queue ---
@@ -980,8 +993,8 @@ elif app_mode == "📥 Admin Ticket Queue":
             """, unsafe_allow_html=True)
             
         # Display Tickets Table
-        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-        st.subheader("📋 Active Support Queue Records")
+        with st.container(border=True):
+            st.subheader("📋 Active Support Queue Records")
         
         df_disp = pd.DataFrame(tickets)
         df_disp = df_disp[[
@@ -1001,11 +1014,10 @@ elif app_mode == "📥 Admin Ticket Queue":
         }, inplace=True)
         
         st.dataframe(df_disp, use_container_width=True, hide_index=True)
-        st.markdown("</div>", unsafe_allow_html=True)
         
         # Edit / Manage Panel
-        st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
-        st.subheader("🛠️ Ticket Management Console")
+        with st.container(border=True):
+            st.subheader("🛠️ Ticket Management Console")
         
         ticket_options = [f"Ticket #{t['id']} - [{t['priority']}] {t['actual_category']} ({t['status']})" for t in tickets]
         selected_ticket_str = st.selectbox("Choose a ticket to inspect or resolve:", ticket_options)
@@ -1080,9 +1092,8 @@ elif app_mode == "📥 Admin Ticket Queue":
                     if del_btn:
                         delete_ticket(selected_ticket_id)
                         st.success(f"Ticket #{selected_ticket_id} deleted successfully!")
-                        st.rerun()
-                        
-        st.markdown("</div>", unsafe_allow_html=True)
+        st.markdown("</div>", unsafe_allow_html=True) # closing the inner HTML layout inside col1
+        # st.container context ends here, indent level goes back to outer
         
         with st.expander("⚠️ Danger Zone: Clear Ticket Queue Records", expanded=False):
             st.warning("Warning: This action will permanently erase all tickets from the database.")
