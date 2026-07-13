@@ -403,7 +403,7 @@ def render_analysis_card(transcribed_text, active_model='logistic', ticket_id=No
 
 # --- 1. Departments Overview (Landing Page) ---
 if app_mode == "🏢 Departments Overview":
-    st.markdown(f"### 🏢 {T('Enterprise Dashboard Overview')}", unsafe_allow_html=True)
+    st.markdown(f"### 🏢 {T('Customer Support Ticket')}", unsafe_allow_html=True)
     
     # Real-time Stats Header
     tickets = get_all_tickets()
