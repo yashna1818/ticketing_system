@@ -246,12 +246,7 @@ whisper_model_size = st.sidebar.selectbox(
     help="Smaller models run faster. Larger models are more accurate."
 )
 
-with st.sidebar.expander("🔑 Cloud Whisper API (Fast)", expanded=False):
-    openai_api_key = st.text_input(
-        "OpenAI API Key:",
-        type="password",
-        help="If provided, routes audio via OpenAI cloud Whisper API for sub-second transcription."
-    )
+openai_api_key = None  # Cloud Whisper disabled; using local Whisper only
 
 # Common Rendering Card for Analysis
 def render_analysis_card(transcribed_text, active_model='logistic', ticket_id=None):
