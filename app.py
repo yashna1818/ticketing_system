@@ -15,15 +15,27 @@ from translator import translate_text, detect_language, transliterate_text
 from priority_classifier import PriorityClassifier
 
 # Page Config must be the first Streamlit command
-st.set_page_config(page_title="Voice Support AI Console", page_icon="🎧", layout="wide", initial_sidebar_state="expanded")
+st.set_page_config(
+    page_title="AuraSupport AI Console", 
+    page_icon="🎧", 
+    layout="wide", 
+    initial_sidebar_state="expanded"
+)
+
+# Initialize Session State for Navigation
+if "app_mode" not in st.session_state:
+    st.session_state.app_mode = "🏢 Departments Overview"
 
 # Language Selector in Sidebar
-st.sidebar.title("🌐 Language / ಭಾಷೆ / भाषा")
+st.sidebar.markdown("""
+<div style="text-align: center; padding: 5px 0;">
+    <span style="font-size: 2.2rem;">🌐</span>
+</div>
+""", unsafe_allow_html=True)
 sys_lang = st.sidebar.selectbox(
-    "Select System Language:", 
+    "System Language / ಭಾಷೆ / भाषा:", 
     ["English", "ಕನ್ನಡ (Kannada)", "हिंदी (Hindi)"], 
-    index=0,
-    label_visibility="collapsed"
+    index=0
 )
 lang_map = {
     "English": "en",
@@ -43,28 +55,36 @@ def T(text):
         return text
     return get_cached_translation(text, target_lang)
 
-# Inject Custom Global CSS for a Premium, Interactive Glassmorphic Theme
+# Inject Custom Global CSS for a Premium, Interactive Glassmorphic Cyberpunk Theme
+# Note: Broad [class*="css"] is removed to prevent layout and text overlapping glitches.
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap');
     
     /* Global font overrides */
-    html, body, [class*="css"], .stMarkdown, p, span, label, td, th {
+    html, body, .stMarkdown, p, span, label, td, th {
         font-family: 'Outfit', sans-serif !important;
+        color: #e2e8f0;
     }
     
-    /* Custom main title styling */
+    /* Main Background Overrides */
+    .stApp {
+        background: radial-gradient(circle at 50% 50%, #121620 0%, #0a0d12 100%);
+    }
+    
+    /* Gradient Main Title */
     .main-title {
-        background: linear-gradient(45deg, #6C63FF, #FF6584, #38EF7D);
+        background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 30%, #ff7675 70%, #ffeaa7 100%);
         background-size: 200% auto;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        font-weight: 700;
-        font-size: 3.6rem;
-        padding-bottom: 0px;
-        margin-bottom: -15px;
+        font-weight: 800;
+        font-size: 3.5rem;
+        padding-bottom: 5px;
+        margin-bottom: -5px;
         text-align: center;
-        animation: gradient-flow 6s ease infinite;
+        animation: gradient-flow 8s ease infinite;
+        letter-spacing: -1px;
     }
     
     @keyframes gradient-flow {
@@ -75,126 +95,139 @@ st.markdown("""
     
     .sub-title {
         text-align: center;
-        color: #A0AEC0;
+        color: #94a3b8;
         font-size: 1.25rem;
-        margin-bottom: 2.5rem;
+        margin-bottom: 2rem;
         font-weight: 300;
         letter-spacing: 0.5px;
+        max-width: 800px;
+        margin-left: auto;
+        margin-right: auto;
     }
     
     /* Custom separator line */
     .grad-divider {
         height: 2px; 
         background: linear-gradient(90deg, transparent, rgba(108, 99, 255, 0.4), rgba(255, 101, 132, 0.4), transparent); 
-        margin: 25px 0;
+        margin: 25px auto;
+        width: 80%;
     }
     
     /* Sleek Glassmorphic Card Container */
     .glass-card {
-        background: rgba(22, 28, 45, 0.6);
+        background: rgba(30, 41, 59, 0.4);
         border: 1px solid rgba(255, 255, 255, 0.08);
         border-radius: 20px;
-        padding: 26px;
+        padding: 24px;
         margin-top: 10px;
         margin-bottom: 20px;
-        box-shadow: 0 10px 40px 0 rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        box-shadow: 0 15px 35px 0 rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
     }
     
     .glass-card:hover {
-        border-color: rgba(108, 99, 255, 0.3);
-        box-shadow: 0 15px 50px 0 rgba(108, 99, 255, 0.15);
-        transform: translateY(-2px);
+        border-color: rgba(108, 99, 255, 0.35);
+        box-shadow: 0 25px 50px 0 rgba(108, 99, 255, 0.12);
+        transform: translateY(-3px);
     }
-    
-    /* Premium Badge styling */
+
+    /* Premium Badges */
     .badge {
-        padding: 6px 14px;
+        padding: 5px 12px;
         border-radius: 10px;
         font-weight: 600;
-        font-size: 0.9rem;
+        font-size: 0.8rem;
         display: inline-block;
         letter-spacing: 0.5px;
         text-transform: uppercase;
     }
     
-    .badge-High { background-color: rgba(255, 75, 75, 0.15); color: #ff6b6b; border: 1px solid rgba(255, 75, 75, 0.3); }
-    .badge-Medium { background-color: rgba(255, 171, 0, 0.15); color: #ffbf00; border: 1px solid rgba(255, 171, 0, 0.3); }
-    .badge-Low { background-color: rgba(0, 200, 83, 0.15); color: #00e676; border: 1px solid rgba(0, 200, 83, 0.3); }
+    .badge-High { background-color: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-Medium { background-color: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-Low { background-color: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
     
-    .badge-Negative { background-color: rgba(255, 75, 75, 0.15); color: #ff6b6b; border: 1px solid rgba(255, 75, 75, 0.3); }
-    .badge-Neutral { background-color: rgba(160, 174, 192, 0.15); color: #cbd5e1; border: 1px solid rgba(160, 174, 192, 0.3); }
-    .badge-Positive { background-color: rgba(0, 200, 83, 0.15); color: #00e676; border: 1px solid rgba(0, 200, 83, 0.3); }
+    .badge-Negative { background-color: rgba(239, 68, 68, 0.15); color: #f87171; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .badge-Neutral { background-color: rgba(148, 163, 184, 0.15); color: #cbd5e1; border: 1px solid rgba(148, 163, 184, 0.3); }
+    .badge-Positive { background-color: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
     
-    .badge-New { background-color: rgba(108, 99, 255, 0.15); color: #a29bfe; border: 1px solid rgba(108, 99, 255, 0.3); }
-    .badge-In-Progress { background-color: rgba(255, 171, 0, 0.15); color: #ffbf00; border: 1px solid rgba(255, 171, 0, 0.3); }
-    .badge-Resolved { background-color: rgba(0, 200, 83, 0.15); color: #00e676; border: 1px solid rgba(0, 200, 83, 0.3); }
+    .badge-New { background-color: rgba(99, 102, 241, 0.15); color: #818cf8; border: 1px solid rgba(99, 102, 241, 0.3); }
+    .badge-In-Progress { background-color: rgba(245, 158, 11, 0.15); color: #fbbf24; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .badge-Resolved { background-color: rgba(16, 185, 129, 0.15); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.3); }
     
-    .badge-Category { background-color: rgba(108, 99, 255, 0.12); color: #a29bfe; border: 1px solid rgba(108, 99, 255, 0.25); }
+    .badge-Category { background-color: rgba(139, 92, 246, 0.12); color: #a78bfa; border: 1px solid rgba(139, 92, 246, 0.25); }
     
-    /* Styled global inputs and textareas */
-    div[data-baseweb="textarea"] {
-        background-color: rgba(255, 255, 255, 0.02) !important;
-        border: 1px solid rgba(255, 255, 255, 0.08) !important;
+    /* Custom forms & text inputs */
+    div[data-baseweb="textarea"], div[data-baseweb="input"] {
+        background-color: rgba(15, 23, 42, 0.55) !important;
+        border: 1px solid rgba(255, 255, 255, 0.1) !important;
         border-radius: 12px !important;
         transition: all 0.3s ease;
     }
-    div[data-baseweb="textarea"]:focus-within {
-        border-color: #6C63FF !important;
-        box-shadow: 0 0 12px rgba(108, 99, 255, 0.25) !important;
-    }
     
-    /* Global override for buttons to feel modern and premium */
+    /* Styled buttons */
     .stButton > button {
-        background: linear-gradient(135deg, #6C63FF, #FF6584) !important;
+        background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%) !important;
         color: white !important;
         border: none !important;
-        border-radius: 10px !important;
-        padding: 10px 24px !important;
+        border-radius: 12px !important;
+        padding: 8px 18px !important;
         font-weight: 600 !important;
-        font-size: 0.95rem !important;
+        font-size: 0.9rem !important;
         letter-spacing: 0.5px !important;
-        box-shadow: 0 5px 15px rgba(108, 99, 255, 0.3) !important;
+        box-shadow: 0 6px 15px rgba(99, 102, 241, 0.25) !important;
         transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) !important;
         width: 100% !important;
     }
     
     .stButton > button:hover {
         transform: translateY(-2px) !important;
-        box-shadow: 0 8px 25px rgba(255, 101, 132, 0.5) !important;
-        background: linear-gradient(135deg, #FF6584, #6C63FF) !important;
+        box-shadow: 0 10px 25px rgba(168, 85, 247, 0.4) !important;
+        background: linear-gradient(135deg, #a855f7 0%, #6366f1 100%) !important;
     }
     
     .stButton > button:active {
         transform: translateY(1px) !important;
     }
     
-    /* Dark sidebar visual refinement */
+    /* Sidebar Navigation Style */
     section[data-testid="stSidebar"] {
-        background-color: #0b0e14 !important;
-        border-right: 1px solid rgba(255, 255, 255, 0.05) !important;
+        background: linear-gradient(180deg, #080c14 0%, #040609 100%) !important;
+        border-right: 1px solid rgba(255, 255, 255, 0.04) !important;
+    }
+
+    /* Floating effect for Hero Cards */
+    .hero-stat-card {
+        background: rgba(30, 41, 59, 0.25);
+        border: 1px solid rgba(255, 255, 255, 0.05);
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(10px);
+        transition: all 0.3s ease;
+    }
+    .hero-stat-card:hover {
+        transform: translateY(-4px);
+        border-color: rgba(99, 102, 241, 0.25);
+        box-shadow: 0 12px 30px rgba(99, 102, 241, 0.1);
     }
 </style>
 """, unsafe_allow_html=True)
-
-# Main Title Display
-st.markdown(f'<div class="main-title">{T("Voice Support AI Console")}</div>', unsafe_allow_html=True)
-st.markdown(f'<div class="sub-title">{T("Route customer voice queries, analyze classification models, and manage live support ticket queues.")}</div>', unsafe_allow_html=True)
-st.markdown('<div class="grad-divider"></div>', unsafe_allow_html=True)
 
 # Navigation Sidebar
 st.sidebar.title(T("🧭 Navigation"))
 app_mode = st.sidebar.radio(
     T("Go to:"), 
     ["🏢 Departments Overview", "🎙️ AI Ticket Analyzer", "📞 Voice Call Agent", "📊 Model Benchmarking", "📥 Admin Ticket Queue"],
+    key="app_mode",
     format_func=T
 )
 st.sidebar.markdown("---")
 
 # Model Loading & Caching
-@st.cache_resource(show_spinner="Loading ML Models...")
+@st.cache_resource(show_spinner="Loading ML Classifiers...")
 def load_classifier():
     clf = TicketClassifier()
     loaded = clf.load()
@@ -205,7 +238,6 @@ def load_priority_classifier():
     pclf = PriorityClassifier()
     loaded = pclf.load()
     if not loaded:
-        # Auto-train on synthetic data — no external dataset needed
         pclf.train()
         pclf.save()
     return pclf
@@ -274,9 +306,9 @@ def render_analysis_card(transcribed_text, active_model='logistic', ticket_id=No
         st.markdown(f"""
         <div class="glass-card">
             <h4 style="margin-top:0px; color: #f8f9fa;">
-                🗣️ Official Call Transcript {f' (Ticket #{ticket_id})' if ticket_id else ''}
+                🗣️ {T("Official Call Transcript")} {f' (Ticket #{ticket_id})' if ticket_id else ''}
             </h4>
-            <p style="font-size: 1.2rem; color: #e2e8f0; line-height: 1.6; font-style:italic; border-left: 3px solid #6C63FF; padding-left: 15px; margin-top: 15px;">
+            <p style="font-size: 1.25rem; color: #f1f5f9; line-height: 1.6; font-style:italic; border-left: 4px solid #6366f1; padding-left: 20px; margin-top: 20px;">
                 "{transcribed_text}"
             </p>
         </div>
@@ -284,7 +316,7 @@ def render_analysis_card(transcribed_text, active_model='logistic', ticket_id=No
         
         st.markdown(f"""
         <div class="glass-card">
-            <h4 style="margin-top:0px; color: #f8f9fa;">⚖️ Model Prediction Consensus</h4>
+            <h4 style="margin-top:0px; color: #f8f9fa;">⚖️ {T("Model Prediction Consensus")}</h4>
             <table style="width:100%; border-collapse: collapse; margin-top: 15px; color: #cbd5e1;">
                 <tr style="border-bottom: 2px solid rgba(255,255,255,0.08); font-weight: 600;">
                     <th style="text-align: left; padding: 10px 8px; color: #94a3b8; font-size: 0.95rem; text-transform: uppercase;">Model</th>
@@ -313,12 +345,12 @@ def render_analysis_card(transcribed_text, active_model='logistic', ticket_id=No
         bar_l = f"{conf_l * 100:.0f}%"
         
         st.markdown(f"""
-        <div class="glass-card" style="background: linear-gradient(135deg, rgba(22, 28, 45, 0.7), rgba(108, 99, 255, 0.05));">
-            <h4 style="margin-top:0px; color: #f8f9fa;">🎛️ AI Routing Analysis ({active_model.upper()})</h4>
+        <div class="glass-card" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(99, 102, 241, 0.05)); border-color: rgba(99, 102, 241, 0.2);">
+            <h4 style="margin-top:0px; color: #f8f9fa;">🎛️ {T("AI Routing Analysis")} ({active_model.upper()})</h4>
             <br>
             <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
                 <span style="color: #94a3b8; font-size: 0.9rem;">Routed Department</span><br>
-                <span class="badge" style="background-color:rgba(255,101,132,0.2); color:#FF6584; border:1px solid #FF6584; margin-top: 5px;">{routed_dept}</span>
+                <span class="badge" style="background-color:rgba(168, 85, 247, 0.2); color:#c084fc; border:1px solid #a855f7; margin-top: 5px;">{routed_dept}</span>
             </div>
             <br>
             <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 12px;">
@@ -340,69 +372,169 @@ def render_analysis_card(transcribed_text, active_model='logistic', ticket_id=No
                 <span style="color: #94a3b8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">🎯 Priority ML Confidence</span>
                 <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #ff6b6b; font-size: 0.8rem; width: 48px;">High</span>
+                        <span style="color: #f87171; font-size: 0.8rem; width: 48px;">High</span>
                         <div style="flex: 1; background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; overflow: hidden;">
-                            <div style="width: {bar_h}; height: 100%; background: linear-gradient(90deg, #ff4b4b, #ff6b6b); border-radius: 4px; transition: width 0.5s;"></div>
+                            <div style="width: {bar_h}; height: 100%; background: linear-gradient(90deg, #ef4444, #f87171); border-radius: 4px; transition: width 0.5s;"></div>
                         </div>
                         <span style="color: #94a3b8; font-size: 0.75rem; width: 34px; text-align: right;">{bar_h}</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #ffbf00; font-size: 0.8rem; width: 48px;">Med</span>
+                        <span style="color: #fbbf24; font-size: 0.8rem; width: 48px;">Med</span>
                         <div style="flex: 1; background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; overflow: hidden;">
-                            <div style="width: {bar_m}; height: 100%; background: linear-gradient(90deg, #e6a100, #ffbf00); border-radius: 4px; transition: width 0.5s;"></div>
+                            <div style="width: {bar_m}; height: 100%; background: linear-gradient(90deg, #d97706, #fbbf24); border-radius: 4px; transition: width 0.5s;"></div>
                         </div>
                         <span style="color: #94a3b8; font-size: 0.75rem; width: 34px; text-align: right;">{bar_m}</span>
                     </div>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <span style="color: #00e676; font-size: 0.8rem; width: 48px;">Low</span>
+                        <span style="color: #34d399; font-size: 0.8rem; width: 48px;">Low</span>
                         <div style="flex: 1; background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; overflow: hidden;">
-                            <div style="width: {bar_l}; height: 100%; background: linear-gradient(90deg, #00b853, #00e676); border-radius: 4px; transition: width 0.5s;"></div>
+                            <div style="width: {bar_l}; height: 100%; background: linear-gradient(90deg, #059669, #34d399); border-radius: 4px; transition: width 0.5s;"></div>
                         </div>
                         <span style="color: #94a3b8; font-size: 0.75rem; width: 34px; text-align: right;">{bar_l}</span>
                     </div>
                 </div>
-                <div style="margin-top: 12px; padding: 8px 10px; background: rgba(108,99,255,0.08); border-radius: 8px; border-left: 3px solid rgba(108,99,255,0.5);">
-                    <span style="color: #a29bfe; font-size: 0.78rem; line-height: 1.5;">{explanation}</span>
+                <div style="margin-top: 12px; padding: 8px 10px; background: rgba(99,102,241,0.08); border-radius: 8px; border-left: 3px solid rgba(99,102,241,0.5);">
+                    <span style="color: #a5b4fc; font-size: 0.78rem; line-height: 1.5;">{explanation}</span>
                 </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
 
-# --- 1. Departments Overview ---
+# --- 1. Departments Overview (Landing Page) ---
 if app_mode == "🏢 Departments Overview":
-    st.markdown("### 🏦 Intelligent Ticket Routing Architecture", unsafe_allow_html=True)
-    st.info("👈 **Select a new AI tool from the sidebar to continue!**")
+    st.markdown(f"### 🏢 {T('Enterprise Dashboard Overview')}", unsafe_allow_html=True)
     
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("""
-        <div class="glass-card" style="text-align:center; background: linear-gradient(135deg, rgba(22, 28, 45, 0.7), rgba(255, 101, 132, 0.05));">
-            <div style="font-size:3.5rem; margin-bottom: 10px;">💳</div>
-            <h3 style="color:#FF6584; margin-top: 5px;">Finance & Billing</h3>
-            <p style="color:#cbd5e1; font-size: 1.05rem;">Automatically processes billing complaints, invoice inquiries, subscription fees, and cancellation requests.</p>
-            <span class="badge badge-Category" style="margin-top: 10px;">Finance & Billing</span>
-        </div>
-        <div class="glass-card" style="text-align:center; background: linear-gradient(135deg, rgba(22, 28, 45, 0.7), rgba(108, 99, 255, 0.05));">
-            <div style="font-size:3.5rem; margin-bottom: 10px;">🧑‍💻</div>
-            <h3 style="color:#6C63FF; margin-top: 5px;">IT & Engineering</h3>
-            <p style="color:#cbd5e1; font-size: 1.05rem;">Handles product crashes, tech issues, software bugs, speed degradation, or database synchronization concerns.</p>
-            <span class="badge badge-Category" style="margin-top: 10px;">IT & Engineering</span>
+    # Real-time Stats Header
+    tickets = get_all_tickets()
+    tot = len(tickets)
+    high = len([t for t in tickets if t['priority'] == 'High'])
+    open_t = len([t for t in tickets if t['status'] in ['New', 'In Progress']])
+    res_t = len([t for t in tickets if t['status'] == 'Resolved'])
+    
+    stat_col1, stat_col2, stat_col3, stat_col4 = st.columns(4)
+    with stat_col1:
+        st.markdown(f"""
+        <div class="hero-stat-card">
+            <span style="font-size: 2.8rem; font-weight: 800; color: #818cf8; display: block; margin-bottom: 2px;">{tot}</span>
+            <span style="font-size: 0.85rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">{T("Total Tickets")}</span>
         </div>
         """, unsafe_allow_html=True)
-    with col2:
-        st.markdown("""
-        <div class="glass-card" style="text-align:center; background: linear-gradient(135deg, rgba(22, 28, 45, 0.7), rgba(56, 239, 125, 0.05));">
-            <div style="font-size:3.5rem; margin-bottom: 10px;">🔐</div>
-            <h3 style="color:#38EF7D; margin-top: 5px;">Security & Auth</h3>
-            <p style="color:#cbd5e1; font-size: 1.05rem;">Deals with customer account lockouts, password resets, unauthorized access reports, and authentication failures.</p>
-            <span class="badge badge-Category" style="margin-top: 10px;">Security & Auth</span>
+    with stat_col2:
+        st.markdown(f"""
+        <div class="hero-stat-card">
+            <span style="font-size: 2.8rem; font-weight: 800; color: #f87171; display: block; margin-bottom: 2px;">{high}</span>
+            <span style="font-size: 0.85rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">🚨 {T("High Priority")}</span>
         </div>
-        <div class="glass-card" style="text-align:center; border: 1px solid rgba(108, 99, 255, 0.3); background: linear-gradient(135deg, rgba(108, 99, 255, 0.15), rgba(22, 28, 45, 0.8));">
-            <div style="font-size:3.5rem; margin-bottom: 10px;">⚡</div>
-            <h3 style="color:#6C63FF; margin-top: 5px;">Priority Escalation</h3>
-            <p style="color:#cbd5e1; font-size: 1.05rem;">Triggered immediately upon matching high-risk keywords (e.g. hacked, legal, fraud, broken) or detecting negative customer sentiment.</p>
-            <span class="badge badge-High" style="margin-top: 10px;">High Urgency Boost</span>
+        """, unsafe_allow_html=True)
+    with stat_col3:
+        st.markdown(f"""
+        <div class="hero-stat-card">
+            <span style="font-size: 2.8rem; font-weight: 800; color: #fbbf24; display: block; margin-bottom: 2px;">{open_t}</span>
+            <span style="font-size: 0.85rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">📁 {T("Open Tickets")}</span>
+        </div>
+        """, unsafe_allow_html=True)
+    with stat_col4:
+        st.markdown(f"""
+        <div class="hero-stat-card">
+            <span style="font-size: 2.8rem; font-weight: 800; color: #34d399; display: block; margin-bottom: 2px;">{res_t}</span>
+            <span style="font-size: 0.85rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">✅ {T("Resolved")}</span>
+        </div>
+        """, unsafe_allow_html=True)
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Core Features Landing Grid
+    col_feat1, col_feat2 = st.columns(2)
+    with col_feat1:
+        with st.container(border=True):
+            st.markdown(f"""
+            <div style="font-size: 2.5rem; margin-bottom: 5px;">🎙️</div>
+            <h3 style="color: #818cf8; margin-top: 5px; font-weight: 700;">{T("Voice Analyzer & Transcriber")}</h3>
+            <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5; min-height: 70px;">
+                {T("Record voice queries or upload audio. Whisper STT transcribes, while our classifiers auto-route, assess sentiment, and prioritize.")}
+            </p>
+            """, unsafe_allow_html=True)
+            if st.button("🚀 " + T("Launch AI Analyzer"), key="btn_go_analyzer", width='stretch'):
+                st.session_state.app_mode = "🎙️ AI Ticket Analyzer"
+                st.rerun()
+                
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        with st.container(border=True):
+            st.markdown(f"""
+            <div style="font-size: 2.5rem; margin-bottom: 5px;">📞</div>
+            <h3 style="color: #34d399; margin-top: 5px; font-weight: 700;">{T("Real-Time Simulated Phone Call")}</h3>
+            <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5; min-height: 70px;">
+                {T("Experience a two-way voice call support agent. Speech synthesis answers back in selected system languages dynamically.")}
+            </p>
+            """, unsafe_allow_html=True)
+            if st.button("📞 " + T("Start Voice Call Sim"), key="btn_go_voice", width='stretch'):
+                st.session_state.app_mode = "📞 Voice Call Agent"
+                st.rerun()
+                
+    with col_feat2:
+        with st.container(border=True):
+            st.markdown(f"""
+            <div style="font-size: 2.5rem; margin-bottom: 5px;">📊</div>
+            <h3 style="color: #c084fc; margin-top: 5px; font-weight: 700;">{T("Multi-Model ML Benchmarking")}</h3>
+            <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5; min-height: 70px;">
+                {T("Analyze classifiers (Logistic Regression, Naive Bayes, SVM). Review validation metrics and retrain models on the fly.")}
+            </p>
+            """, unsafe_allow_html=True)
+            if st.button("📊 " + T("Check Model Diagnostics"), key="btn_go_bench", width='stretch'):
+                st.session_state.app_mode = "📊 Model Benchmarking"
+                st.rerun()
+                
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        with st.container(border=True):
+            st.markdown(f"""
+            <div style="font-size: 2.5rem; margin-bottom: 5px;">📥</div>
+            <h3 style="color: #fbbf24; margin-top: 5px; font-weight: 700;">{T("Live Admin Queue Console")}</h3>
+            <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.5; min-height: 70px;">
+                {T("Inspect details in the SQLite dispatch queue. Manually adjust ticket statuses, save notes, and speak responses.")}
+            </p>
+            """, unsafe_allow_html=True)
+            if st.button("📥 " + T("Open Queue Manager"), key="btn_go_queue", width='stretch'):
+                st.session_state.app_mode = "📥 Admin Ticket Queue"
+                st.rerun()
+
+    st.markdown("<br>", unsafe_allow_html=True)
+    
+    # Department Map / Architecture section
+    st.markdown(f"### 🏦 {T('Intelligent Routing Architecture Mapping')}")
+    col_dept1, col_dept2, col_dept3, col_dept4 = st.columns(4)
+    with col_dept1:
+        st.markdown(f"""
+        <div class="glass-card" style="text-align: center; border-color: rgba(99, 102, 241, 0.15); height: 160px;">
+            <div style="font-size: 1.8rem;">🧑‍💻</div>
+            <h4 style="color: #818cf8; margin-top: 5px; font-size: 1rem;">{T("IT & Engineering")}</h4>
+            <p style="font-size: 0.82rem; color: #94a3b8;">Bugs, system down alerts, errors, crashes.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_dept2:
+        st.markdown(f"""
+        <div class="glass-card" style="text-align: center; border-color: rgba(168, 85, 247, 0.15); height: 160px;">
+            <div style="font-size: 1.8rem;">💳</div>
+            <h4 style="color: #c084fc; margin-top: 5px; font-size: 1rem;">{T("Finance & Billing")}</h4>
+            <p style="font-size: 0.82rem; color: #94a3b8;">Subscription fees, invoice claims, refunds.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_dept3:
+        st.markdown(f"""
+        <div class="glass-card" style="text-align: center; border-color: rgba(16, 185, 129, 0.15); height: 160px;">
+            <div style="font-size: 1.8rem;">🔐</div>
+            <h4 style="color: #34d399; margin-top: 5px; font-size: 1rem;">{T("Security & Auth")}</h4>
+            <p style="font-size: 0.82rem; color: #94a3b8;">Authentication locks, security breaches.</p>
+        </div>
+        """, unsafe_allow_html=True)
+    with col_dept4:
+        st.markdown(f"""
+        <div class="glass-card" style="text-align: center; border-color: rgba(245, 158, 11, 0.15); height: 160px;">
+            <div style="font-size: 1.8rem;">⚡</div>
+            <h4 style="color: #fbbf24; margin-top: 5px; font-size: 1rem;">{T("Priority Escalation")}</h4>
+            <p style="font-size: 0.82rem; color: #94a3b8;">Auto-detecting fraud, legal issues, or anger.</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -438,7 +570,7 @@ elif app_mode == "🎙️ AI Ticket Analyzer":
         else:
             text_input = st.text_area("✍️ Customer Message Context", height=150, placeholder="Type customer query here... e.g. I cannot access my account because my password reset is broken.")
 
-        analyze_btn = st.button("🚀 Analyze Support Ticket", use_container_width=True, type="primary")
+        analyze_btn = st.button("🚀 Analyze Support Ticket", width='stretch', type="primary")
         st.markdown("</div>", unsafe_allow_html=True)
 
     if analyze_btn:
@@ -517,12 +649,11 @@ elif app_mode == "📞 Voice Call Agent":
     # Autoplay pending AI voice if exists
     if "pending_audio" in st.session_state and st.session_state.pending_audio is not None:
         st.audio(st.session_state.pending_audio, format="audio/mp3", autoplay=True)
-        # Clear it so it doesn't replay when the user talks back
         st.session_state.pending_audio = None
             
     if not st.session_state.chat_finished:
         st.markdown("---")
-        # Voice Input Component with dynamic key to auto-reset after each submission
+        # Voice Input Component
         audio_value = st.audio_input(
             T("🗣️ It's your turn to speak..."), 
             key=f"voice_agent_audio_{st.session_state.audio_input_counter}"
@@ -532,7 +663,6 @@ elif app_mode == "📞 Voice Call Agent":
             audio_bytes = audio_value.getbuffer().tobytes()
             audio_hash = hash(audio_bytes)
             
-            # Make sure we only process this recording ONCE to prevent infinite looping
             if st.session_state.last_processed_audio_hash != audio_hash:
                 st.session_state.last_processed_audio_hash = audio_hash
                 
@@ -541,31 +671,27 @@ elif app_mode == "📞 Voice Call Agent":
                         f.write(audio_bytes)
                         audio_path = f.name
                         
-                    # Transcribe using the selected target language to guide Whisper
                     user_text = transcribe_audio(audio_path, model_name=whisper_model_size, api_key=openai_api_key, language=target_lang)
                     os.remove(audio_path)
                     
                     st.session_state.messages.append({"role": "user", "content": user_text})
-                    st.session_state.audio_input_counter += 1 # Reset the input widget
-                    st.rerun()  # Instantly display user message
+                    st.session_state.audio_input_counter += 1
+                    st.rerun()
             else:
-                pass # Already processed this specific buffer
+                pass
                 
-        # If the last message was from the User, explicitly Generate AI Response!
+        # Generate Agent Reply
         if len(st.session_state.messages) > 0 and st.session_state.messages[-1]["role"] == "user":
             with st.spinner("Agent is thinking and generating a voice reply..."):
-                time.sleep(1) # Fake realistic latency
+                time.sleep(1)
                 user_msgs = [m for m in st.session_state.messages if m["role"] == "user"]
                 last_user_text = user_msgs[-1]["content"]
                 
-                # Force the conversation to proceed in the selected language
                 detected_lang = target_lang
                 st.session_state.agent_lang = target_lang
                 
-                # Translate to English for keyword matching logic
                 last_user_text_en = translate_text(last_user_text, source_lang=detected_lang, target_lang='en').lower()
                 
-                # Dynamic multi-turn voice logic based on customer utterance keywords in English
                 if len(user_msgs) == 1:
                     if any(w in last_user_text_en for w in ['log in', 'login', 'password', 'account', 'auth', 'access', 'blocked', 'locked', 'reset']):
                         reply_en = "I understand you are having account access issues. Could you please specify if you are seeing any specific error code, and let me know if you tried resetting it?"
@@ -578,14 +704,11 @@ elif app_mode == "📞 Voice Call Agent":
                     else:
                         reply_en = "I've noted that down. Could you provide a bit more detail about the exact issue so I can route it to the right team?"
                 else:
-                    # Conclude conversation
                     reply_en = "Thank you so much for securely providing those details! Our call is now concluded. I will immediately escalate this transcript to the optimal department. Have a nice day!"
                     st.session_state.chat_finished = True
                 
-                # Translate reply back to detected language
                 reply = translate_text(reply_en, source_lang='en', target_lang=detected_lang)
                 
-                # Generate transliteration if language is Kannada or Hindi
                 transliterated = ""
                 if detected_lang in ['kn', 'hi']:
                     transliterated = transliterate_text(reply, detected_lang)
@@ -595,31 +718,25 @@ elif app_mode == "📞 Voice Call Agent":
                     "content": reply,
                     "transliterated": transliterated
                 })
-                st.session_state.pending_audio = synthesize_speech(reply, lang=detected_lang) # Generate Audio!
+                st.session_state.pending_audio = synthesize_speech(reply, lang=detected_lang)
                 st.rerun()
  
     else:
-        st.success("☎️ **Call Dropped.** Conversation Archived. Generating Live ML Routing Trace...")
+        st.success("☎️ Call Dropped. Conversation Archived. Generating Live ML Routing Trace...")
         
-        # Compile user context to analyze
         full_transcript = " ".join([m["content"] for m in st.session_state.messages if m["role"] == "user"])
-        
-        # Auto-detect language
         detected_lang = st.session_state.get("agent_lang", target_lang)
         
-        # Translate to English for ML pipeline
         if detected_lang in ['kn', 'hi']:
             full_transcript_en = translate_text(full_transcript, source_lang=detected_lang, target_lang='en')
         else:
             full_transcript_en = full_transcript
             
-        # Calculate ML classification
         all_preds = clf.predict_all(full_transcript_en)
         category = all_preds[active_model]
         sentiment, _ = get_sentiment_and_priority(full_transcript_en)
         priority = priority_clf.predict(full_transcript_en, category)
         
-        # Save to DB
         ticket_id = add_ticket(
             transcript=full_transcript,
             category=category,
@@ -633,7 +750,7 @@ elif app_mode == "📞 Voice Call Agent":
         st.success(f"🎟️ Ticket #{ticket_id} created and queued successfully!")
         render_analysis_card(full_transcript, active_model, ticket_id=ticket_id)
         
-        if st.button("🔄 Initiate New Call"):
+        if st.button("🔄 Initiate New Call", width='stretch'):
             if "messages" in st.session_state:
                 del st.session_state.messages
             if "chat_finished" in st.session_state:
@@ -650,7 +767,6 @@ elif app_mode == "📊 Model Benchmarking":
     if not is_loaded or not clf.metrics:
         st.warning("⚠️ Benchmarking metrics are not available. Please run model training below to generate metrics.")
     else:
-        # Load and display metrics
         metrics_df = pd.DataFrame(clf.metrics).T
         metrics_df = metrics_df.round(4)
         
@@ -668,7 +784,6 @@ elif app_mode == "📊 Model Benchmarking":
             st.bar_chart(chart_data)
             st.markdown("</div>", unsafe_allow_html=True)
             
-        # Model detailed plots section
         st.markdown("<div class='glass-card'>", unsafe_allow_html=True)
         st.subheader("🧩 Advanced Model Diagnostic Visualizations")
         
@@ -692,7 +807,6 @@ elif app_mode == "📊 Model Benchmarking":
                 cm_data = np.array(clf.confusion_matrices[bench_model_key])
                 classes = clf.classes if clf.classes else ["Account Access", "Billing Issue", "General Inquiry", "Refund Request", "Technical Issue"]
                 
-                # Plotting using Seaborn
                 sns.heatmap(
                     cm_data, 
                     annot=True, 
@@ -777,7 +891,7 @@ elif app_mode == "📊 Model Benchmarking":
                 "(1, 3) (Unigrams + Bigrams + Trigrams)": (1, 3)
             }
             
-        submit_train = st.form_submit_button("⚡ Re-train Classifier Pipeline", use_container_width=True)
+        submit_train = st.form_submit_button("⚡ Re-train Classifier Pipeline", width='stretch')
         
         if submit_train:
             with st.spinner("Executing pipeline: Loading dataset, cleaning text, and fitting models..."):
@@ -791,7 +905,6 @@ elif app_mode == "📊 Model Benchmarking":
                     if len(df) > train_size:
                         df = df.sample(train_size, random_state=42)
                         
-                    # Trigger training
                     metrics = clf.train(
                         df=df, 
                         test_size=split_ratio, 
@@ -801,7 +914,6 @@ elif app_mode == "📊 Model Benchmarking":
                     )
                     clf.save()
                     
-                    # Also retrain the ML priority classifier
                     priority_clf.train()
                     priority_clf.save()
                     
@@ -823,7 +935,6 @@ elif app_mode == "📥 Admin Ticket Queue":
     if not tickets:
         st.info("🎟️ No active tickets in the queue. Go to **AI Ticket Analyzer** or **Voice Call Agent** to submit some customer complaints!")
     else:
-        # Render Analytics Metrics Cards
         tot = len(tickets)
         high = len([t for t in tickets if t['priority'] == 'High'])
         open_t = len([t for t in tickets if t['status'] in ['New', 'In Progress']])
@@ -832,30 +943,30 @@ elif app_mode == "📥 Admin Ticket Queue":
         col_t1, col_t2, col_t3, col_t4 = st.columns(4)
         with col_t1:
             st.markdown(f"""
-            <div style="background: linear-gradient(135deg, rgba(108, 99, 255, 0.15), rgba(22, 28, 45, 0.6)); border: 1px solid rgba(108, 99, 255, 0.25); border-radius: 16px; padding: 22px; text-align: center; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);">
-                <span style="font-size: 2.6rem; font-weight: 700; color: #a29bfe; display: block; margin-bottom: 5px;">{tot}</span>
-                <span style="font-size: 0.85rem; color: #cbd5e1; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Total Tickets</span>
+            <div style="background: rgba(99, 102, 241, 0.12); border: 1px solid rgba(99, 102, 241, 0.25); border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);">
+                <span style="font-size: 2.8rem; font-weight: 800; color: #a5b4fc; display: block; margin-bottom: 2px;">{tot}</span>
+                <span style="font-size: 0.85rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">Total Tickets</span>
             </div>
             """, unsafe_allow_html=True)
         with col_t2:
             st.markdown(f"""
-            <div style="background: linear-gradient(135deg, rgba(255, 75, 75, 0.15), rgba(22, 28, 45, 0.6)); border: 1px solid rgba(255, 75, 75, 0.25); border-radius: 16px; padding: 22px; text-align: center; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);">
-                <span style="font-size: 2.6rem; font-weight: 700; color: #ff6b6b; display: block; margin-bottom: 5px;">{high}</span>
-                <span style="font-size: 0.85rem; color: #cbd5e1; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">🚨 High Priority</span>
+            <div style="background: rgba(239, 68, 68, 0.12); border: 1px solid rgba(239, 68, 68, 0.25); border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);">
+                <span style="font-size: 2.8rem; font-weight: 800; color: #f87171; display: block; margin-bottom: 2px;">{high}</span>
+                <span style="font-size: 0.85rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">🚨 High Priority</span>
             </div>
             """, unsafe_allow_html=True)
         with col_t3:
             st.markdown(f"""
-            <div style="background: linear-gradient(135deg, rgba(255, 171, 0, 0.15), rgba(22, 28, 45, 0.6)); border: 1px solid rgba(255, 171, 0, 0.25); border-radius: 16px; padding: 22px; text-align: center; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);">
-                <span style="font-size: 2.6rem; font-weight: 700; color: #ffbf00; display: block; margin-bottom: 5px;">{open_t}</span>
-                <span style="font-size: 0.85rem; color: #cbd5e1; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">📁 Open Tickets</span>
+            <div style="background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.25); border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);">
+                <span style="font-size: 2.8rem; font-weight: 800; color: #fbbf24; display: block; margin-bottom: 2px;">{open_t}</span>
+                <span style="font-size: 0.85rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">📁 Open Tickets</span>
             </div>
             """, unsafe_allow_html=True)
         with col_t4:
             st.markdown(f"""
-            <div style="background: linear-gradient(135deg, rgba(0, 200, 83, 0.15), rgba(22, 28, 45, 0.6)); border: 1px solid rgba(0, 200, 83, 0.25); border-radius: 16px; padding: 22px; text-align: center; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);">
-                <span style="font-size: 2.6rem; font-weight: 700; color: #00e676; display: block; margin-bottom: 5px;">{res_t}</span>
-                <span style="font-size: 0.85rem; color: #cbd5e1; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">✅ Resolved</span>
+            <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25); border-radius: 20px; padding: 20px; text-align: center; box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3); backdrop-filter: blur(8px);">
+                <span style="font-size: 2.8rem; font-weight: 800; color: #34d399; display: block; margin-bottom: 2px;">{res_t}</span>
+                <span style="font-size: 0.85rem; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">✅ Resolved</span>
             </div>
             """, unsafe_allow_html=True)
             
@@ -898,26 +1009,25 @@ elif app_mode == "📥 Admin Ticket Queue":
             
             with det_col1:
                 st.markdown(f"""
-                <div style="background: rgba(0,0,0,0.25); padding: 20px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.06);">
+                <div style="background: rgba(15, 23, 42, 0.4); padding: 24px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.06);">
                     <p style="color: #94a3b8; font-size: 0.85rem; margin-bottom: 5px;">SUBMITTED TIMESTAMP: {t_detail['timestamp']}</p>
-                    <h5 style="margin-top: 0px; color: #f8f9fa; font-size: 1.1rem; font-weight: 600;">🗣️ Captured Transcript</h5>
-                    <p style="font-size: 1.15rem; color: #cbd5e1; font-style: italic; line-height: 1.6; border-left: 2px solid #6C63FF; padding-left: 15px; margin-top: 10px;">
+                    <h5 style="margin-top: 0px; color: #f8f9fa; font-size: 1.15rem; font-weight: 600;">🗣️ Captured Transcript</h5>
+                    <p style="font-size: 1.2rem; color: #e2e8f0; font-style: italic; line-height: 1.6; border-left: 3px solid #6366f1; padding-left: 15px; margin-top: 12px;">
                         "{t_detail['transcript']}"
                     </p>
                     <hr style="border-color: rgba(255,255,255,0.06);">
-                    <div style="margin-top: 15px;">
+                    <div style="margin-top: 15px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
                         <span style="color: #94a3b8; font-size: 0.85rem;">Classification: </span>
                         <span class="badge badge-Category">{t_detail['predicted_category']}</span>
-                        <span style="color: #94a3b8; font-size: 0.85rem; margin-left: 15px;">Model: </span>
-                        <span style="color: #FF6584; font-weight: 600; font-size: 0.9rem;">{t_detail['model_used'].upper()}</span>
-                        <span style="color: #94a3b8; font-size: 0.85rem; margin-left: 15px;">Sentiment: </span>
+                        <span style="color: #94a3b8; font-size: 0.85rem;">Model: </span>
+                        <span style="color: #a855f7; font-weight: 600; font-size: 0.9rem;">{t_detail['model_used'].upper()}</span>
+                        <span style="color: #94a3b8; font-size: 0.85rem;">Sentiment: </span>
                         <span class="badge badge-{t_detail['sentiment']}">{t_detail['sentiment']}</span>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
                 
             with det_col2:
-                # Update ticket properties form
                 st.write("**Modify Ticket Attributes & Dispatch Resolution**")
                 
                 dept_opts = ["Account Access", "Billing Issue", "General Inquiry", "Refund Request", "Technical Issue"]
@@ -938,16 +1048,15 @@ elif app_mode == "📥 Admin Ticket Queue":
                 col_btn1, col_btn2, col_btn3 = st.columns(3)
                 
                 with col_btn1:
-                    save_btn = st.button("💾 Save Updates", use_container_width=True, type="primary")
+                    save_btn = st.button("💾 Save Updates", width='stretch', type="primary")
                     if save_btn:
                         update_ticket(selected_ticket_id, new_dept, new_priority, new_status, res_note)
                         st.success(f"Ticket #{selected_ticket_id} updated successfully!")
                         st.rerun()
                         
                 with col_btn2:
-                    tts_btn = st.button("🗣️ Speak Resolution", use_container_width=True)
+                    tts_btn = st.button("🗣️ Speak Resolution", width='stretch')
                     if tts_btn:
-                        # Construct a helpful audio script
                         if res_note.strip():
                             tts_text = f"This is an automated notification from Support Desk regarding ticket number {selected_ticket_id}. Status has been set to {new_status}. Agent resolution note: {res_note}"
                         else:
@@ -958,7 +1067,7 @@ elif app_mode == "📥 Admin Ticket Queue":
                             st.audio(audio_file, format="audio/mp3", autoplay=True)
                             
                 with col_btn3:
-                    del_btn = st.button("🗑️ Dismiss Ticket", use_container_width=True)
+                    del_btn = st.button("🗑️ Dismiss Ticket", width='stretch')
                     if del_btn:
                         delete_ticket(selected_ticket_id)
                         st.success(f"Ticket #{selected_ticket_id} deleted successfully!")
@@ -966,7 +1075,6 @@ elif app_mode == "📥 Admin Ticket Queue":
                         
         st.markdown("</div>", unsafe_allow_html=True)
         
-        # Clear database expander
         with st.expander("⚠️ Danger Zone: Clear Ticket Queue Records", expanded=False):
             st.warning("Warning: This action will permanently erase all tickets from the database.")
             clear_btn = st.button("Clear All Queue Records", type="secondary")
