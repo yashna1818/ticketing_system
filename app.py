@@ -578,8 +578,8 @@ elif app_mode == "🎙️ AI Ticket Analyzer":
     audio_path = None
     text_input = ""
 
-    col_left, col_right = st.columns([1.4, 1], gap="large")
-    with col_left:
+    col_input1, col_input2, col_input3 = st.columns([1, 6, 1])
+    with col_input2:
         with st.container(border=True):
             st.write("#### 📝 Customer Query Input")
             if input_method == "🎙️ Single Voice Note":
@@ -595,40 +595,9 @@ elif app_mode == "🎙️ AI Ticket Analyzer":
                         f.write(uploaded_file.getbuffer())
                         audio_path = f.name
             else:
-                text_input = st.text_area("✍️ Customer Message Context", height=180, placeholder="Type customer query here... e.g. I cannot access my account because my password reset is broken.")
+                text_input = st.text_area("✍️ Customer Message Context", height=150, placeholder="Type customer query here... e.g. I cannot access my account because my password reset is broken.")
 
             analyze_btn = st.button("🚀 Analyze Support Ticket", width='stretch', type="primary")
-
-    with col_right:
-        with st.container(border=True):
-            st.write("#### 🧠 AuraSupport ML Processing Flow")
-            st.markdown(f"""
-            <div style="background: rgba(15,23,42,0.3); border-radius:12px; padding:15px; border:1px solid rgba(255,255,255,0.05); margin-bottom: 15px;">
-                <span style="font-size:0.8rem; color:#818cf8; text-transform:uppercase; font-weight:600; display:block; margin-bottom:10px;">Pipeline Trace</span>
-                <div style="font-size:0.9rem; line-height:1.8; color:#cbd5e1;">
-                    🎙️ Voice Query Input <br>
-                    &nbsp;&nbsp;&nbsp;&nbsp; ⬇️ <br>
-                    🔊 <b>Whisper STT</b> (Transcription) <br>
-                    &nbsp;&nbsp;&nbsp;&nbsp; ⬇️ <br>
-                    🌐 <b>Translation & Text Cleanup</b> <br>
-                    &nbsp;&nbsp;&nbsp;&nbsp; ⬇️ <br>
-                    🎛️ <b>TF-IDF Vectorizer</b> & <b>ML Classifiers</b> <br>
-                    &nbsp;&nbsp;&nbsp;&nbsp; ⬇️ <br>
-                    ⚡ <b>Priority Classifier</b> & <b>Boost Logic</b> <br>
-                    &nbsp;&nbsp;&nbsp;&nbsp; ⬇️ <br>
-                    📥 Routed Ticket Saved in <b>SQLite DB</b>
-                </div>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            st.write("⚡ **Escalation Rules & Keywords**")
-            st.markdown(f"""
-            <div style="font-size:0.85rem; color:#cbd5e1; line-height:1.5;">
-                • <b>Security Boost</b>: <i>Account Access</i> category + Negative sentiment $\\rightarrow$ always <b>High</b>.<br>
-                • <b>Financial Boost</b>: <i>Billing Issue</i> or <i>Refund Request</i> + Negativity $\\rightarrow$ always <b>High</b>.<br>
-                • <b>Urgent Keywords</b>: Words like <i>hacked</i>, <i>compromised</i>, <i>fraud</i>, <i>unauthorized</i>, <i>legal</i>, or <i>stolen</i> trigger immediate escalation to <b>High Priority</b>.
-            </div>
-            """, unsafe_allow_html=True)
 
     if analyze_btn:
         if not audio_path and not text_input.strip():
