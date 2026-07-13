@@ -69,6 +69,7 @@ def init_db():
         import datetime
         now = datetime.datetime.now()
         seeds = [
+            # 1. Account Access
             (
                 "मेरा खाता ब्लॉक हो गया है और मैं लॉग इन नहीं कर पा रहा हूँ, कृपया तुरंत मदद करें।",
                 "Account Access", "Account Access", "Negative", "High", "logistic", "New", "",
@@ -76,11 +77,51 @@ def init_db():
                 "hi", "My account has been blocked and I cannot log in, please help immediately."
             ),
             (
+                "Help! I cannot access my account because my two-factor authenticator app is lost.",
+                "Account Access", "Account Access", "Negative", "High", "svc", "In Progress", "Requested identity verification documents from user.",
+                (now - datetime.timedelta(minutes=10)).strftime("%Y-%m-%d %H:%M:%S"),
+                "en", ""
+            ),
+            (
+                "ನನ್ನ ಅಕೌಂಟ್ ಅನ್ನು ಯಾರೋ ಹ್ಯಾಕ್ ಮಾಡಿದ್ದಾರೆ ಅಂತ ಸಂಶಯವಿದೆ.",
+                "Account Access", "Account Access", "Negative", "High", "logistic", "New", "",
+                (now - datetime.timedelta(minutes=25)).strftime("%Y-%m-%d %H:%M:%S"),
+                "kn", "I suspect someone has hacked my account."
+            ),
+            (
+                "मेरा पासवर्ड रीसेट लिंक काम नहीं कर रहा है, लॉगिन करने में सहायता करें।",
+                "Account Access", "Account Access", "Negative", "Medium", "naive_bayes", "New", "",
+                (now - datetime.timedelta(hours=3)).strftime("%Y-%m-%d %H:%M:%S"),
+                "hi", "My password reset link is not working, help me log in."
+            ),
+
+            # 2. Billing Issues
+            (
                 "I was double charged on my credit card for the annual subscription renewal fees. This is unauthorized and fraudulent!",
                 "Billing Issue", "Billing Issue", "Negative", "High", "svc", "In Progress", "Agent is currently inspecting payment processor logs.",
                 (now - datetime.timedelta(minutes=15)).strftime("%Y-%m-%d %H:%M:%S"),
                 "en", ""
             ),
+            (
+                "I received an invoice for a canceled tier renewal. Can you review this charge?",
+                "Billing Issue", "Billing Issue", "Negative", "Medium", "logistic", "New", "",
+                (now - datetime.timedelta(minutes=45)).strftime("%Y-%m-%d %H:%M:%S"),
+                "en", ""
+            ),
+            (
+                "ನನ್ನ ಇನ್‌ವಾಯ್ಸ್‌ನಲ್ಲಿ ತಪ್ಪು ಅಮೌಂಟ್ ಚಾರ್ಜ್ ಮಾಡಲಾಗಿದೆ.",
+                "Billing Issue", "Billing Issue", "Negative", "Medium", "svc", "Resolved", "Adjusted billing balance and sent revised receipt.",
+                (now - datetime.timedelta(hours=5)).strftime("%Y-%m-%d %H:%M:%S"),
+                "kn", "Wrong amount has been charged in my invoice."
+            ),
+            (
+                "मेरे क्रेडिट कार्ड से अनधिकृत शुल्क काटा गया है, इसे रद्द करें।",
+                "Billing Issue", "Billing Issue", "Negative", "High", "svc", "New", "",
+                (now - datetime.timedelta(hours=6)).strftime("%Y-%m-%d %H:%M:%S"),
+                "hi", "An unauthorized charge has been deducted from my credit card, cancel it."
+            ),
+
+            # 3. Technical Issues
             (
                 "ನನ್ನ ಮೊಬೈಲ್ ಆಪ್‌ನಲ್ಲಿ ಅಪ್‌ಡೇಟ್ ಆದ ನಂತರ ಡೇಟಾ ಸಿಂಕ್ ಆಗ್ತಿಲ್ಲ.",
                 "Technical Issue", "Technical Issue", "Negative", "Medium", "naive_bayes", "New", "",
@@ -88,16 +129,74 @@ def init_db():
                 "kn", "Data is not syncing in my mobile app after the update."
             ),
             (
+                "The database latency is extremely high, causing all our API endpoints to timeout.",
+                "Technical Issue", "Technical Issue", "Negative", "High", "logistic", "New", "",
+                (now - datetime.timedelta(minutes=50)).strftime("%Y-%m-%d %H:%M:%S"),
+                "en", ""
+            ),
+            (
+                "ನನ್ನ ಅಪ್ಲಿಕೇಶನ್ ಕ್ರ್ಯಾಶ್ ಆಗ್ತಾ ಇದೆ, ದಯವಿಟ್ಟು ನೋಡಿ.",
+                "Technical Issue", "Technical Issue", "Negative", "Medium", "naive_bayes", "In Progress", "Developer investigating traceback dumps.",
+                (now - datetime.timedelta(hours=4)).strftime("%Y-%m-%d %H:%M:%S"),
+                "kn", "My application is crashing, please check."
+            ),
+            (
+                "वेबसाइट लोड होने में बहुत समय ले रही है, स्क्रीन पूरी तरह से खाली हो जाती है।",
+                "Technical Issue", "Technical Issue", "Negative", "Medium", "svc", "New", "",
+                (now - datetime.timedelta(hours=8)).strftime("%Y-%m-%d %H:%M:%S"),
+                "hi", "The website is taking a lot of time to load, the screen goes completely blank."
+            ),
+
+            # 4. Refund Requests
+            (
+                "I requested a refund for my cancelled subscription last week but haven't received the credit yet.",
+                "Refund Request", "Refund Request", "Neutral", "Medium", "svc", "New", "",
+                (now - datetime.timedelta(hours=2)).strftime("%Y-%m-%d %H:%M:%S"),
+                "en", ""
+            ),
+            (
+                "I cancelled within the 30-day window. I demand a full refund as per policy.",
+                "Refund Request", "Refund Request", "Negative", "Medium", "logistic", "New", "",
+                (now - datetime.timedelta(hours=10)).strftime("%Y-%m-%d %H:%M:%S"),
+                "en", ""
+            ),
+            (
+                "ನನಗೆ ತಪ್ಪು ಉತ್ಪನ್ನ ಕಳುಹಿಸಲಾಗಿದೆ, ಹಣ ಮರಳಿ ಬೇಕು.",
+                "Refund Request", "Refund Request", "Negative", "Medium", "svc", "Resolved", "Refund approved and credited back to original payment method.",
+                (now - datetime.timedelta(hours=12)).strftime("%Y-%m-%d %H:%M:%S"),
+                "kn", "I was sent the wrong product, need my money back."
+            ),
+            (
+                "मुझे अपनी रिफंड राशि अभी तक नहीं मिली है, कृपया अपडेट दें।",
+                "Refund Request", "Refund Request", "Neutral", "Medium", "logistic", "In Progress", "Finance team reviewing refund status tracker.",
+                (now - datetime.timedelta(hours=14)).strftime("%Y-%m-%d %H:%M:%S"),
+                "hi", "I have not received my refund amount yet, please update."
+            ),
+
+            # 5. General Inquiries
+            (
                 "Hello, I would like to know if your system supports custom dark mode theme settings or background options?",
                 "General Inquiry", "General Inquiry", "Positive", "Low", "logistic", "Resolved", "Sent styling options guide and documentation link.",
                 (now - datetime.timedelta(hours=1)).strftime("%Y-%m-%d %H:%M:%S"),
                 "en", ""
             ),
             (
-                "I requested a refund for my cancelled subscription last week but haven't received the credit yet.",
-                "Refund Request", "Refund Request", "Neutral", "Medium", "svc", "New", "",
-                (now - datetime.timedelta(hours=2)).strftime("%Y-%m-%d %H:%M:%S"),
+                "Where can I find the API documentation for integrating this dashboard into our app?",
+                "General Inquiry", "General Inquiry", "Positive", "Low", "logistic", "Resolved", "Shared API documentation endpoint and developers hub link.",
+                (now - datetime.timedelta(hours=16)).strftime("%Y-%m-%d %H:%M:%S"),
                 "en", ""
+            ),
+            (
+                "ನಿಮ್ಮ ಗ್ರಾಹಕ ಸೇವಾ ಸಮಯ ಯಾವಾಗ?",
+                "General Inquiry", "General Inquiry", "Positive", "Low", "logistic", "Resolved", "Shared operational hours: Mon-Fri 9am-6pm IST.",
+                (now - datetime.timedelta(hours=18)).strftime("%Y-%m-%d %H:%M:%S"),
+                "kn", "When is your customer service hours?"
+            ),
+            (
+                "क्या आपके पास वार्षिक सदस्यता के लिए कोई छूट ऑफर है?",
+                "General Inquiry", "General Inquiry", "Positive", "Low", "logistic", "Resolved", "Sent code for 15% discount on annual plan.",
+                (now - datetime.timedelta(hours=20)).strftime("%Y-%m-%d %H:%M:%S"),
+                "hi", "Do you have any discount offers for annual membership?"
             )
         ]
         cursor.executemany("""
