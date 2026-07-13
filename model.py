@@ -141,6 +141,21 @@ class TicketClassifier:
             
         with open(vec_path, 'rb') as f:
             self.vectorizer = pickle.load(f)
+
+        # Verify the vectorizer was actually fitted (has idf_ attribute).
+        # A corrupt or stub pkl from a failed training run won't have it.
+        if not hasattr(self.vectorizer, 'idf_'):
+            print("WARNING: vectorizer.pkl exists but is not fitted. Deleting stale pkl files.")
+            # Remove all stale pkl files so the app re-trains from scratch
+            for stale in [vec_path] + [
+                os.path.join(base_dir, f'model_{n}.pkl')
+                for n in ['logistic', 'naive_bayes', 'svc']
+            ]:
+                try:
+                    os.remove(stale)
+                except FileNotFoundError:
+                    pass
+            return False
             
         for name in self.models.keys():
             model_path = os.path.join(base_dir, f'model_{name}.pkl')
@@ -171,20 +186,30 @@ class TicketClassifier:
             
         return True
         
+    def _check_fitted(self):
+        """Raise a clear error if the vectorizer has not been fitted."""
+        if not hasattr(self.vectorizer, 'idf_'):
+            raise RuntimeError(
+                "The TF-IDF vectorizer is not fitted. "
+                "Please train the model first via the Training tab or by running train_pipeline.py."
+            )
+
     def predict(self, text, model_name='logistic'):
+        self._check_fitted()
         cleaned = clean_text(text)
         vec = self.vectorizer.transform([cleaned])
         if model_name in self.models:
             pred = self.models[model_name].predict(vec)[0]
-            return pred
+            return str(pred)
         else:
             raise ValueError(f"Model {model_name} not found.")
 
     def predict_all(self, text):
+        self._check_fitted()
         cleaned = clean_text(text)
         vec = self.vectorizer.transform([cleaned])
         predictions = {}
         for name, clf in self.models.items():
-            predictions[name] = clf.predict(vec)[0]
+            predictions[name] = str(clf.predict(vec)[0])
         return predictions
 

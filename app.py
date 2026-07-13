@@ -12,6 +12,7 @@ from preprocessing import get_sentiment_and_priority
 from model import TicketClassifier
 from db_helper import add_ticket, get_all_tickets, update_ticket, delete_ticket, clear_all_tickets
 from translator import translate_text, detect_language, transliterate_text
+from priority_classifier import PriorityClassifier
 
 # Page Config must be the first Streamlit command
 st.set_page_config(page_title="Voice Support AI Console", page_icon="🎧", layout="wide", initial_sidebar_state="expanded")
@@ -199,7 +200,18 @@ def load_classifier():
     loaded = clf.load()
     return clf, loaded
 
+@st.cache_resource(show_spinner="Loading Priority Classifier...")
+def load_priority_classifier():
+    pclf = PriorityClassifier()
+    loaded = pclf.load()
+    if not loaded:
+        # Auto-train on synthetic data — no external dataset needed
+        pclf.train()
+        pclf.save()
+    return pclf
+
 clf, is_loaded = load_classifier()
+priority_clf = load_priority_classifier()
 
 # Active Model Selector
 if is_loaded:
@@ -217,6 +229,13 @@ if is_loaded:
     active_model = model_key_map[selected_model_key]
 else:
     active_model = 'logistic'
+
+# Priority classifier sidebar status
+if priority_clf.is_trained:
+    acc = priority_clf.train_metrics.get('accuracy', 0)
+    st.sidebar.success(f"🎯 Priority ML: Active ({acc:.0%} acc)")
+else:
+    st.sidebar.warning("⚠️ Priority ML: Rule-based fallback")
 
 # Whisper Configuration Sidebar
 st.sidebar.subheader("🎙️ Whisper STT Config")
@@ -238,7 +257,8 @@ with st.sidebar.expander("🔑 Cloud Whisper API (Fast)", expanded=False):
 def render_analysis_card(transcribed_text, active_model='logistic', ticket_id=None):
     all_preds = clf.predict_all(transcribed_text)
     category = all_preds[active_model]
-    sentiment, priority = get_sentiment_and_priority(transcribed_text)
+    sentiment, _ = get_sentiment_and_priority(transcribed_text)  # sentiment only
+    priority, explanation, confidence = priority_clf.predict_with_explanation(transcribed_text, category)
     
     dept_mapping = {
         "Billing Issue": "Finance & Billing",
@@ -248,6 +268,11 @@ def render_analysis_card(transcribed_text, active_model='logistic', ticket_id=No
         "General Inquiry": "Tier 1 Support"
     }
     routed_dept = dept_mapping.get(category, "Tier 1 Support")
+    
+    # Confidence bar widths (percentage strings)
+    conf_h  = confidence.get('High',   0.0)
+    conf_m  = confidence.get('Medium', 0.0)
+    conf_l  = confidence.get('Low',    0.0)
     
     res_col1, res_col2 = st.columns([1.5, 1])
     with res_col1:
@@ -287,6 +312,11 @@ def render_analysis_card(transcribed_text, active_model='logistic', ticket_id=No
         """, unsafe_allow_html=True)
         
     with res_col2:
+        # Priority confidence mini-bars
+        bar_h = f"{conf_h * 100:.0f}%"
+        bar_m = f"{conf_m * 100:.0f}%"
+        bar_l = f"{conf_l * 100:.0f}%"
+        
         st.markdown(f"""
         <div class="glass-card" style="background: linear-gradient(135deg, rgba(22, 28, 45, 0.7), rgba(108, 99, 255, 0.05));">
             <h4 style="margin-top:0px; color: #f8f9fa;">🎛️ AI Routing Analysis ({active_model.upper()})</h4>
@@ -306,9 +336,39 @@ def render_analysis_card(transcribed_text, active_model='logistic', ticket_id=No
                 <span class="badge badge-{sentiment}" style="margin-top: 5px;">{sentiment}</span>
             </div>
             <br>
-            <div>
+            <div style="border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 14px;">
                 <span style="color: #94a3b8; font-size: 0.9rem;">Urgency Level</span><br>
-                <span class="badge badge-{priority}" style="margin-top: 5px;">{priority} priority</span>
+                <span class="badge badge-{priority}" style="margin-top: 5px;">{priority} Priority</span>
+            </div>
+            <br>
+            <div>
+                <span style="color: #94a3b8; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;">🎯 Priority ML Confidence</span>
+                <div style="margin-top: 10px; display: flex; flex-direction: column; gap: 6px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #ff6b6b; font-size: 0.8rem; width: 48px;">High</span>
+                        <div style="flex: 1; background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; overflow: hidden;">
+                            <div style="width: {bar_h}; height: 100%; background: linear-gradient(90deg, #ff4b4b, #ff6b6b); border-radius: 4px; transition: width 0.5s;"></div>
+                        </div>
+                        <span style="color: #94a3b8; font-size: 0.75rem; width: 34px; text-align: right;">{bar_h}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #ffbf00; font-size: 0.8rem; width: 48px;">Med</span>
+                        <div style="flex: 1; background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; overflow: hidden;">
+                            <div style="width: {bar_m}; height: 100%; background: linear-gradient(90deg, #e6a100, #ffbf00); border-radius: 4px; transition: width 0.5s;"></div>
+                        </div>
+                        <span style="color: #94a3b8; font-size: 0.75rem; width: 34px; text-align: right;">{bar_m}</span>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="color: #00e676; font-size: 0.8rem; width: 48px;">Low</span>
+                        <div style="flex: 1; background: rgba(255,255,255,0.06); border-radius: 4px; height: 8px; overflow: hidden;">
+                            <div style="width: {bar_l}; height: 100%; background: linear-gradient(90deg, #00b853, #00e676); border-radius: 4px; transition: width 0.5s;"></div>
+                        </div>
+                        <span style="color: #94a3b8; font-size: 0.75rem; width: 34px; text-align: right;">{bar_l}</span>
+                    </div>
+                </div>
+                <div style="margin-top: 12px; padding: 8px 10px; background: rgba(108,99,255,0.08); border-radius: 8px; border-left: 3px solid rgba(108,99,255,0.5);">
+                    <span style="color: #a29bfe; font-size: 0.78rem; line-height: 1.5;">{explanation}</span>
+                </div>
             </div>
         </div>
         """, unsafe_allow_html=True)
@@ -404,7 +464,8 @@ elif app_mode == "🎙️ AI Ticket Analyzer":
                     # Calculate ML classification
                     all_preds = clf.predict_all(transcribed_text)
                     category = all_preds[active_model]
-                    sentiment, priority = get_sentiment_and_priority(transcribed_text)
+                    sentiment, _ = get_sentiment_and_priority(transcribed_text)
+                    priority = priority_clf.predict(transcribed_text, category)
                     
                     # Save to DB
                     ticket_id = add_ticket(
@@ -427,6 +488,12 @@ elif app_mode == "📞 Voice Call Agent":
         st.error("🚨 ML Models Missing! Train model first.")
         st.stop()
         
+    # Reset conversation if target language changes
+    if "agent_lang" in st.session_state and st.session_state.agent_lang != target_lang:
+        for key in ["messages", "chat_finished", "pending_audio", "last_processed_audio_hash", "agent_lang"]:
+            if key in st.session_state:
+                del st.session_state[key]
+
     st.markdown(f"### 📞 {T('Real-Time Live Phone Call Support Simulation')}")
     st.markdown(T("Experience a two-way AI voice call! Speak to the Agent, and the Agent will reply back. Once the call is resolved, the transcript is analyzed and queued in the DB."))
     
@@ -446,7 +513,8 @@ elif app_mode == "📞 Voice Call Agent":
 
     # Render Visual Conversation History
     for msg in st.session_state.messages:
-        with st.chat_message(msg["role"]):
+        avatar = "🤖" if msg["role"] == "assistant" else "👤"
+        with st.chat_message(msg["role"], avatar=avatar):
             st.write(msg["content"])
             if msg["role"] == "assistant" and msg.get("transliterated"):
                 st.caption(f"✍️ *Transliteration (Latin):* {msg['transliterated']}")
@@ -478,7 +546,8 @@ elif app_mode == "📞 Voice Call Agent":
                         f.write(audio_bytes)
                         audio_path = f.name
                         
-                    user_text = transcribe_audio(audio_path, model_name=whisper_model_size, api_key=openai_api_key)
+                    # Transcribe using the selected target language to guide Whisper
+                    user_text = transcribe_audio(audio_path, model_name=whisper_model_size, api_key=openai_api_key, language=target_lang)
                     os.remove(audio_path)
                     
                     st.session_state.messages.append({"role": "user", "content": user_text})
@@ -494,9 +563,9 @@ elif app_mode == "📞 Voice Call Agent":
                 user_msgs = [m for m in st.session_state.messages if m["role"] == "user"]
                 last_user_text = user_msgs[-1]["content"]
                 
-                # Auto-detect language of user spoke text
-                detected_lang = detect_language(last_user_text)
-                st.session_state.agent_lang = detected_lang
+                # Force the conversation to proceed in the selected language
+                detected_lang = target_lang
+                st.session_state.agent_lang = target_lang
                 
                 # Translate to English for keyword matching logic
                 last_user_text_en = translate_text(last_user_text, source_lang=detected_lang, target_lang='en').lower()
@@ -552,7 +621,8 @@ elif app_mode == "📞 Voice Call Agent":
         # Calculate ML classification
         all_preds = clf.predict_all(full_transcript_en)
         category = all_preds[active_model]
-        sentiment, priority = get_sentiment_and_priority(full_transcript_en)
+        sentiment, _ = get_sentiment_and_priority(full_transcript_en)
+        priority = priority_clf.predict(full_transcript_en, category)
         
         # Save to DB
         ticket_id = add_ticket(
@@ -736,8 +806,12 @@ elif app_mode == "📊 Model Benchmarking":
                     )
                     clf.save()
                     
+                    # Also retrain the ML priority classifier
+                    priority_clf.train()
+                    priority_clf.save()
+                    
                     st.cache_resource.clear()
-                    st.success("🎉 Models trained successfully and saved to disk! Refreshed charts.")
+                    st.success("🎉 Models + Priority Classifier trained and saved! Refreshed charts.")
                     st.rerun()
                 except Exception as e:
                     st.error(f"Error during interactive training pipeline: {e}")

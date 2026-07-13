@@ -15,14 +15,14 @@ def get_whisper_model(model_name="base"):
         _model_cache[model_name] = whisper.load_model(model_name)
     return _model_cache[model_name]
 
-def transcribe_audio(audio_path, model_name="base", api_key=None):
+def transcribe_audio(audio_path, model_name="base", api_key=None, language=None):
     """
     Takes an audio file path (e.g., WAV, MP3) and returns the transcribed text.
     Uses OpenAI API if api_key is provided, falling back to local Whisper on failure.
     """
     if api_key and api_key.strip():
         import requests
-        print("API Key detected. Attempting OpenAI cloud transcription...")
+        print(f"API Key detected. Attempting OpenAI cloud transcription in language={language}...")
         try:
             headers = {
                 "Authorization": f"Bearer {api_key}"
@@ -32,7 +32,15 @@ def transcribe_audio(audio_path, model_name="base", api_key=None):
                     "file": f,
                     "model": (None, "whisper-1")
                 }
-                response = requests.post("https://api.openai.com/v1/audio/transcriptions", headers=headers, files=files)
+                data = {}
+                if language:
+                    data["language"] = language
+                response = requests.post(
+                    "https://api.openai.com/v1/audio/transcriptions", 
+                    headers=headers, 
+                    files=files, 
+                    data=data
+                )
             if response.status_code == 200:
                 return response.json()["text"]
             else:
@@ -41,7 +49,8 @@ def transcribe_audio(audio_path, model_name="base", api_key=None):
             print(f"Failed to transcribe via API: {e}. Falling back to local Whisper.")
 
     model = get_whisper_model(model_name)
-    result = model.transcribe(audio_path)
+    # Whisper expects 2-letter ISO code or None
+    result = model.transcribe(audio_path, language=language) if language else model.transcribe(audio_path)
     return result["text"]
 
 
