@@ -218,12 +218,21 @@ st.markdown("""
 
 # Navigation Sidebar
 st.sidebar.title(T("🧭 Navigation"))
-app_mode = st.sidebar.radio(
+modes = ["🏢 Departments Overview", "🎙️ AI Ticket Analyzer", "📞 Voice Call Agent", "📊 Model Benchmarking", "📥 Admin Ticket Queue"]
+current_index = modes.index(st.session_state.app_mode) if st.session_state.app_mode in modes else 0
+
+selected_mode = st.sidebar.radio(
     T("Go to:"), 
-    ["🏢 Departments Overview", "🎙️ AI Ticket Analyzer", "📞 Voice Call Agent", "📊 Model Benchmarking", "📥 Admin Ticket Queue"],
-    key="app_mode",
+    modes,
+    index=current_index,
     format_func=T
 )
+
+if selected_mode != st.session_state.app_mode:
+    st.session_state.app_mode = selected_mode
+    st.rerun()
+
+app_mode = st.session_state.app_mode
 st.sidebar.markdown("---")
 
 # Model Loading & Caching
