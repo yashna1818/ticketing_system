@@ -11,8 +11,8 @@ from preprocessing import clean_text
 
 class TicketClassifier:
     def __init__(self):
-        # Default vectorizer settings
-        self.vectorizer = TfidfVectorizer(max_features=8000, ngram_range=(1, 2))
+        # Default vectorizer settings with optimized sublinear scaling and min document frequency
+        self.vectorizer = TfidfVectorizer(max_features=8000, ngram_range=(1, 2), sublinear_tf=True, min_df=2)
         
         # Storing three different classifiers to compare performance
         self.models = {
@@ -30,7 +30,7 @@ class TicketClassifier:
         from sklearn.metrics import confusion_matrix
         
         print(f"Re-initializing model components: max_features={max_features}, ngram_range={ngram_range}, C={logistic_C}")
-        self.vectorizer = TfidfVectorizer(max_features=max_features, ngram_range=ngram_range)
+        self.vectorizer = TfidfVectorizer(max_features=max_features, ngram_range=ngram_range, sublinear_tf=True, min_df=2)
         self.models['logistic'] = LogisticRegression(max_iter=1000, class_weight='balanced', C=logistic_C)
         self.models['svc'] = LinearSVC(class_weight='balanced', dual='auto', C=logistic_C)
         
