@@ -278,7 +278,7 @@ if is_loaded:
     selected_model_key = st.sidebar.selectbox(
         "Choose Active Model:",
         ["Logistic Regression", "Naive Bayes", "Support Vector Machine (SVC)"],
-        index=0
+        index=2
     )
     model_key_map = {
         "Logistic Regression": "logistic",
@@ -287,7 +287,7 @@ if is_loaded:
     }
     active_model = model_key_map[selected_model_key]
 else:
-    active_model = 'logistic'
+    active_model = 'svc'
 
 # Priority classifier sidebar status
 if priority_clf.is_trained:
@@ -308,7 +308,7 @@ whisper_model_size = st.sidebar.selectbox(
 openai_api_key = None  # Cloud Whisper disabled; using local Whisper only
 
 # Common Rendering Card for Analysis
-def render_analysis_card(transcribed_text, active_model='logistic', ticket_id=None):
+def render_analysis_card(transcribed_text, active_model='svc', ticket_id=None):
     all_preds = clf.predict_all(transcribed_text)
     category = all_preds[active_model]
     sentiment, _ = get_sentiment_and_priority(transcribed_text)  # sentiment only
