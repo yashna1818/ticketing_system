@@ -278,7 +278,7 @@ if is_loaded:
     selected_model_key = st.sidebar.selectbox(
         "Choose Active Model:",
         ["Logistic Regression", "Naive Bayes", "Support Vector Machine (SVC)"],
-        index=2
+        index=0
     )
     model_key_map = {
         "Logistic Regression": "logistic",
@@ -287,7 +287,7 @@ if is_loaded:
     }
     active_model = model_key_map[selected_model_key]
 else:
-    active_model = 'svc'
+    active_model = 'logistic'
 
 # Priority classifier sidebar status
 if priority_clf.is_trained:

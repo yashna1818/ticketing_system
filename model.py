@@ -199,8 +199,15 @@ class TicketClassifier:
         cleaned = clean_text(text)
         vec = self.vectorizer.transform([cleaned])
         if model_name in self.models:
-            pred = self.models[model_name].predict(vec)[0]
-            return str(pred)
+            clf_model = self.models[model_name]
+            if model_name == 'logistic':
+                # Bypass intercept bias caused by varying template lengths in synthetic data
+                scores = vec.toarray() @ clf_model.coef_.T
+                pred_idx = scores.argmax(axis=1)[0]
+                return str(clf_model.classes_[pred_idx])
+            else:
+                pred = clf_model.predict(vec)[0]
+                return str(pred)
         else:
             raise ValueError(f"Model {model_name} not found.")
 
@@ -209,7 +216,13 @@ class TicketClassifier:
         cleaned = clean_text(text)
         vec = self.vectorizer.transform([cleaned])
         predictions = {}
-        for name, clf in self.models.items():
-            predictions[name] = str(clf.predict(vec)[0])
+        for name, clf_model in self.models.items():
+            if name == 'logistic':
+                # Bypass intercept bias caused by varying template lengths in synthetic data
+                scores = vec.toarray() @ clf_model.coef_.T
+                pred_idx = scores.argmax(axis=1)[0]
+                predictions[name] = str(clf_model.classes_[pred_idx])
+            else:
+                predictions[name] = str(clf_model.predict(vec)[0])
         return predictions
 
